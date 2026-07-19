@@ -68,27 +68,18 @@
 
       if (currentSphere) scene.remove(currentSphere);
 
-      const loader = new THREE.TextureLoader();
-      loader.load(panoramas[index].url, 
-        (texture) => {
-          console.log("Фото загружено успешно");
-          const geometry = new THREE.SphereGeometry(800, 80, 60);
-          geometry.scale(-1, 1, 1);
+      new THREE.TextureLoader().load(panoramas[index].url, (texture) => {
+        const geometry = new THREE.SphereGeometry(800, 80, 60);
+        geometry.scale(-1, 1, 1);   // ← Исправление зеркальности
 
-          const material = new THREE.MeshBasicMaterial({ 
-            map: texture, 
-            side: THREE.BackSide 
-          });
-          
-          currentSphere = new THREE.Mesh(geometry, material);
-          scene.add(currentSphere);
-        },
-        undefined,
-        (err) => {
-          console.error("Ошибка загрузки:", err);
-          alert("Не удалось загрузить фото " + panoramas[index].url + ". Проверь имя файла.");
-        }
-      );
+        const material = new THREE.MeshBasicMaterial({ 
+          map: texture, 
+          side: THREE.BackSide 
+        });
+        
+        currentSphere = new THREE.Mesh(geometry, material);
+        scene.add(currentSphere);
+      });
 
       updateThumbnails();
     }
