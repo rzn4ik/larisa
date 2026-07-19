@@ -2,26 +2,32 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Тест 360</title>
+  <title>360 Тур</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>body{margin:0;background:#000;overflow:hidden}</style>
 </head>
-<body style="margin:0;background:black">
-  <div id="container" style="width:100vw;height:100vh"></div>
-
+<body>
   <script>
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+    const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 2000);
     const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('container').appendChild(renderer.domElement);
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
 
     new THREE.TextureLoader().load('1.jpg', (texture) => {
-      const geometry = new THREE.SphereGeometry(500, 60, 40);
-      geometry.scale(-1, 1, 1);
-      const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
-      const sphere = new THREE.Mesh(geometry, material);
-      scene.add(sphere);
+      const geo = new THREE.SphereGeometry(500, 60, 40);
+      geo.scale(-1, 1, 1);
+      const mat = new THREE.MeshBasicMaterial({map: texture, side: THREE.BackSide});
+      scene.add(new THREE.Mesh(geo, mat));
     });
+
+    let dragging = false, prev = 0;
+    onmousedown = () => dragging = true;
+    onmouseup = () => dragging = false;
+    onmousemove = e => {
+      if(dragging) camera.rotation.y += (e.clientX - prev) * 0.003;
+      prev = e.clientX;
+    };
 
     function animate() {
       requestAnimationFrame(animate);
@@ -29,14 +35,11 @@
     }
     animate();
 
-    // Mouse control
-    let isDragging = false, prevX = 0;
-    document.addEventListener('mousedown', () => isDragging = true);
-    document.addEventListener('mouseup', () => isDragging = false);
-    document.addEventListener('mousemove', (e) => {
-      if (isDragging) camera.rotation.y += (e.clientX - prevX) * 0.003;
-      prevX = e.clientX;
-    });
+    onresize = () => {
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    };
   </script>
 </body>
 </html>
