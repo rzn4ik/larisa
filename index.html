@@ -46,8 +46,8 @@
     let currentIndex = 0;
 
     const panoramas = [
-      { id: 1, name: "Панорама 1", url: "1.webp" },
-      { id: 2, name: "Панорама 2", url: "2.webp" }
+      { id: 1, name: "Панорама 1", url: "./1.webp" },
+      { id: 2, name: "Панорама 2", url: "./2.webp" }
     ];
 
     function init() {
@@ -68,18 +68,26 @@
 
       if (currentSphere) scene.remove(currentSphere);
 
-      new THREE.TextureLoader().load(panoramas[index].url, (texture) => {
-        const geometry = new THREE.SphereGeometry(800, 80, 60);
-        geometry.scale(-1, 1, 1);                    // ← Исправление зеркальности
+      const loader = new THREE.TextureLoader();
+      loader.load(panoramas[index].url, 
+        (texture) => {
+          const geometry = new THREE.SphereGeometry(800, 80, 60);
+          geometry.scale(-1, 1, 1);
 
-        const material = new THREE.MeshBasicMaterial({ 
-          map: texture, 
-          side: THREE.BackSide 
-        });
-        
-        currentSphere = new THREE.Mesh(geometry, material);
-        scene.add(currentSphere);
-      });
+          const material = new THREE.MeshBasicMaterial({ 
+            map: texture, 
+            side: THREE.BackSide 
+          });
+          
+          currentSphere = new THREE.Mesh(geometry, material);
+          scene.add(currentSphere);
+          console.log("Панорама " + panoramas[index].id + " загружена успешно");
+        },
+        undefined,
+        (error) => {
+          console.error("Ошибка загрузки фото:", error);
+        }
+      );
 
       updateThumbnails();
     }
