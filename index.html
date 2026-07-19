@@ -1,1 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тестовый 360 Тур</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#000; overflow:hidden; font-family:Arial, sans-serif; }
+    #container { width:100vw; height:100vh; }
 
+    .header {
+      position:absolute; top:0; left:0; right:0; padding:20px 30px;
+      background:linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+      color:white; z-index:200; display:flex; justify-content:space-between;
+      align-items:center;
+    }
+    .title { font-size:1.8rem; font-weight:600; }
+
+    .thumbnails {
+      position:absolute; bottom:30px; left:50%; transform:translateX(-50%);
+      display:flex; gap:15px; background:rgba(0,0,0,0.8); padding:15px;
+      border-radius:25px; z-index:200;
+    }
+    .thumb {
+      width:90px; height:50px; object-fit:cover; border-radius:12px;
+      border:3px solid transparent; cursor:pointer; transition:0.3s;
+    }
+    .thumb.active { border-color:#00ffff; transform:scale(1.15); }
+  </style>
+</head>
+<body>
+
+  <div id="container"></div>
+
+  <div class="header">
+    <div class="title">Тестовый Тур</div>
+    <div><span id="current">1</span> / 2</div>
+  </div>
+
+  <div class="thumbnails" id="thumbnails"></div>
+
+  <script>
+    let scene, camera, renderer, currentSphere;
+    let currentIndex = 0;
+
+    const panoramas = [
+      { id: 1, name: "Панорама 1", url: "1.webp" },
+      { id: 2, name: "Панорама 2", url: "2.webp" }
+    ];
+
+    function init() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+      renderer = new THREE.WebGLRenderer({antialias:true});
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('container').appendChild(renderer.domElement);
+
+      createThumbnails();
+      loadPanorama(0);
+      animate();
+    }
+
+    function loadPanorama(index) {
+      currentIndex = index;
+      document.getElementById('current').textContent = panoramas[index].id;
+
+      if (currentSphere) scene.remove(currentSphere);
+
+      new THREE.TextureLoader().load(panoramas[index].url, (texture) => {
+        const geometry = new THREE.SphereGeometry(800, 80, 60);
+        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide });
+        currentSphere = new THREE.Mesh(geometry, material);
+        scene.add(currentSphere);
+      });
+
+      updateThumbnails();
+    }
+
+    function createThumbnails() {
+      const cont = document.getElementById('thumbnails');
+      cont.innerHTML = '';
+      panoramas.forEach((p, i) => {
+        const img = document.createElement('img');
+        img.src = p.url;
+        img.className = 'thumb';
+        img.onclick = () => loadPanorama(i);
+        cont.appendChild(img);
+      });
+    }
+
+    function updateThumbnails() {
+      document.querySelectorAll('.thumb').forEach((t, i) => {
+        t.classList.toggle('active', i === currentIndex);
+      });
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (currentSphere) currentSphere.rotation.y += 0.0002;
+      renderer.render(scene, camera);
+    }
+
+    // Управление мышкой
+    let dragging = false, prevX = 0;
+    document.addEventListener('mousedown', e => { dragging = true; prevX = e.clientX; });
+    document.addEventListener('mouseup', () => dragging = false);
+    document.addEventListener('mousemove', e => {
+      if (dragging) camera.rotation.y += (e.clientX - prevX) * 0.003;
+      prevX = e.clientX;
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    init();
+  </script>
+</body>
+</html>
