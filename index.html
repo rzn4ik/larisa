@@ -5,115 +5,98 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>360 Tour</title>
 <style>
-    html, body {
-        margin: 0;
-        overflow: hidden;
-        background: #000;
-        font-family: Arial, sans-serif;
-    }
-    canvas { display: block; }
-    #thumbs {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 12px;
-        z-index: 100;
-        padding: 10px;
-        background: rgba(0,0,0,0.6);
-        border-radius: 12px;
-    }
-    #thumbs img {
-        width: 120px;
-        height: 70px;
-        object-fit: cover;
-        border: 3px solid #fff;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: .2s;
-    }
-    #thumbs img:hover, #thumbs img.active {
-        border-color: #00ccff;
-        transform: scale(1.1);
-    }
+html, body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    font-family: Arial, sans-serif;
+}
+canvas {
+    display: block;
+}
+#thumbs {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+#thumbs img {
+    width: 110px;
+    height: 60px;
+    object-fit: cover;
+    border: 2px solid white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: .2s;
+}
+#thumbs img:hover {
+    transform: scale(1.08);
+    border-color: #00aaff;
+}
 </style>
 </head>
 <body>
-
-<div id="thumbs"></div>
-
+<div id="thumbs">
+    <img src="1.jpg" onclick="changePanorama('1.jpg')">
+    <img src="2.jpg" onclick="changePanorama('2.jpg')">
+</div>
 <script type="importmap">
 {
-  "imports": {
-    "three": "https://unpkg.com/three@0.166.1/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.166.1/examples/jsm/"
-  }
+  "imports": {
+    "three": "https://unpkg.com/three@0.166.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.166.1/examples/jsm/"
+  }
 }
 </script>
-
 <script type="module">
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    1,
+    1100
+);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
-
 const geometry = new THREE.SphereGeometry(500, 64, 40);
-geometry.scale(-1, 1, 1);   // исправление зеркальности
-
-let currentMaterial = new THREE.MeshBasicMaterial({ side: THREE.BackSide });
-let sphere = new THREE.Mesh(geometry, currentMaterial);
+// Исправление зеркальности
+geometry.scale(-1, 1, 1);
+let texture = new THREE.TextureLoader().load("1.jpg");
+let material = new THREE.MeshBasicMaterial({
+    map: texture
+});
+let sphere = new THREE.Mesh(geometry, material);
 scene.add(sphere);
-
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableZoom = true;
+controls.enableZoom = false;
 controls.enablePan = false;
-controls.rotateSpeed = -0.4;
+controls.rotateSpeed = -0.3;
 controls.enableDamping = true;
-controls.dampingFactor = 0.08;
+controls.dampingFactor = 0.05;
 camera.position.set(0, 0, 0.1);
-
-const panoramas = [
-    { url: "1.jpg", thumb: "1.jpg" },
-    { url: "2.jpg", thumb: "2.jpg" }
-];
-
-const thumbsContainer = document.getElementById('thumbs');
-
-panoramas.forEach((p, index) => {
-    const img = document.createElement('img');
-    img.src = p.thumb;
-    img.onclick = () => loadPanorama(p.url);
-    if (index === 0) img.classList.add('active');
-    thumbsContainer.appendChild(img);
-});
-
-function loadPanorama(url) {
-    new THREE.TextureLoader().load(url, (texture) => {
-        currentMaterial.map = texture;
-        currentMaterial.needsUpdate = true;
-        
-        document.querySelectorAll('#thumbs img').forEach(img => {
-            img.classList.toggle('active', img.src.includes(url));
-        });
-    });
+window.changePanorama = function(file){
+    new THREE.TextureLoader().load(file, function(newTexture){
+        material.map.dispose();
+        material.map = newTexture;
+        material.needsUpdate = true;
+    });
 }
-
 window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
 function animate(){
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
 }
 animate();
 </script>
